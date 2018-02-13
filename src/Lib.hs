@@ -3,9 +3,7 @@ module Lib
     ( application,
       newServerState
     ) where
-
-import Data.Char (isPunctuation, isSpace)
-import Data.Monoid (mappend)
+      
 import Data.Text (Text)
 import Control.Exception (finally)
 import Control.Monad (forM_, forever)
