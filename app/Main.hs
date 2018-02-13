@@ -8,4 +8,4 @@ main :: IO ()
 main = do
     putStrLn "running..."
     state <- newMVar newServerState
-    WS.runServer "127.0.0.1" 9160 $ application state
+    WS.runServer "127.0.0.1" 30036 $ application state
