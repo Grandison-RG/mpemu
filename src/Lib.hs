@@ -6,6 +6,10 @@ import Data.ByteString.Lazy
 import qualified Network.WebSockets as WS
 import Control.Monad (forever)
 
+dispatchRequest :: ByteString -> ByteString
+dispatchRequest msg = noSuchCommand
+  where noSuchCommand = pack [0, 255]
+
 application :: WS.ServerApp
 application pending = do
     conn <- WS.acceptRequest pending
@@ -13,4 +17,5 @@ application pending = do
     forever $ do
       msg <- WS.receiveData conn
       print . unpack $ msg
-      WS.sendBinaryData conn msg
+      let response = dispatchRequest msg
+      WS.sendBinaryData conn response
