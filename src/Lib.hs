@@ -30,6 +30,9 @@ dispatchRequest msg
         testCmd = pack [0x00, 0xb9]        :: Command
         versionCmd = pack [0x00, 0xa2]     :: Command
 
+emulVer :: String
+emulVer = "v1.0_emul_remote"
+
 dispatchRequest1 :: ByteString -> ByteString
 dispatchRequest1 msg = case ((\(_:x:_) -> x) . unpack $ msg) of
                          0xb9 -> pack [0x01, 0xb9, 0b101]
