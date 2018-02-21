@@ -36,7 +36,7 @@ emulVer = "v1.0_emul_remote"
 dispatchRequest1 :: ByteString -> ByteString
 dispatchRequest1 msg = case ((\(_:x:_) -> x) . unpack $ msg) of
                          0xb9 -> pack [0x01, 0xb9, 0b101]
-                         0xa2 -> let datum = pack [0x02,0x08] `append` BC.pack emulVer
+                         0xa2 -> let datum = pack [0x02,0x08] `append` C.pack emulVer
                                 in
                                   let len = fromIntegral (length  datum - 2)
                                   in cons len datum
