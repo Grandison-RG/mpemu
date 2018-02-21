@@ -30,6 +30,17 @@ dispatchRequest msg
         testCmd = pack [0x00, 0xb9]        :: Command
         versionCmd = pack [0x00, 0xa2]     :: Command
 
+dispatchRequest1 :: ByteString -> ByteString
+dispatchRequest1 msg = case ((\(_:x:_) -> x) . unpack $ msg) of
+                         0xb9 -> pack [0x01, 0xb9, 0b101]
+                         0xa2 -> let datum = pack [0x02,0x08] `append` BC.pack emulVer
+                                in
+                                  let len = fromIntegral (length  datum - 2)
+                                  in cons len datum
+                         _    -> pack [0x0, 0xff]
+
+
+                       
 application :: WS.ServerApp
 application pending = do
     conn <- WS.acceptRequest pending
