@@ -11,28 +11,8 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import           Control.Monad (forever)
 import           Data.Word(Word8)
 
-type Command = ByteString
-type Response = ByteString
-
 data Cmd = VERSION | MOOLTIPASS_STATUS | ERR
   deriving Show
-
-dispatchRequest :: Command -> Response
-dispatchRequest msg
-  | msg == testCmd = testRsp
-  | msg == versionCmd = versionRsp
-  | otherwise = noSuchCmd
-  where noSuchCmd = pack [0x00, 0xff]      :: Response
-
-        testRsp = pack [0x01, 0xb9, 0b101] :: Response
-        versionRsp = cons len datum        :: Response
-                     where
-                       datum = pack [0xa2, 0x08] `append`
-                               (C.pack "v1.0_emul_remote")
-                       len = fromIntegral . length $ datum
-
-        testCmd = pack [0x00, 0xb9]        :: Command
-        versionCmd = pack [0x00, 0xa2]     :: Command
 
 -- emulVer :: String
 -- emulVer = "v1.0_emul_remote"
@@ -57,14 +37,13 @@ commandMap c = case secondByte c of
                 0xB9 -> MOOLTIPASS_STATUS
                 _    -> ERR
 
-dispatchRequest1     :: ByteString -> ByteString
-dispatchRequest1 msg = case commandMap msg of
-                         MOOLTIPASS_STATUS -> moolipassStatus
-                         VERSION           -> emulVer
-                         ERR               -> err
+dispatchRequest     :: ByteString -> ByteString
+dispatchRequest msg = case commandMap msg of
+                        MOOLTIPASS_STATUS -> moolipassStatus
+                        VERSION           -> emulVer
+                        ERR               -> err
 
 
-                       
 application :: WS.ServerApp
 application pending = do
     conn <- WS.acceptRequest pending
@@ -73,7 +52,7 @@ application pending = do
       msg <- WS.receiveData conn
       putStrLn "Request:"
       print . unpack $ msg
-      let response = dispatchRequest1 msg
+      let response = dispatchRequest msg
       WS.sendBinaryData conn response
       putStrLn "Response:"
       print . unpack $ response
