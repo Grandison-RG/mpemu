@@ -82,6 +82,3 @@ dispatchRequest c = case c of
                       GET_CUR_CARD_CPZ    -> getCurCardCpz
                       GET_RANDOM_NUMBER   -> getRandomNumber
                       ERR                 -> err
-
-        
-        
