@@ -8,6 +8,8 @@ import           Data.ByteString.Lazy       hiding (putStrLn,iterate,take)
 import qualified Data.ByteString.Lazy.Char8 as C
 import           Data.Word(Word8)
 import           Data.Function(on)
+import           System.Random
+import           System.IO.Unsafe
 
 data Cmd = VERSION
          | MOOLTIPASS_STATUS
@@ -15,6 +17,7 @@ data Cmd = VERSION
          | GET_MOOLTIPASS_PARM
          | SET_DATE
          | GET_CUR_CARD_CPZ
+         | GET_RANDOM_NUMBER
          | ERR
   deriving Show
 
@@ -29,6 +32,7 @@ commandMap c = case secondByte c of
                 0xB2 -> GET_MOOLTIPASS_PARM
                 0xBB -> SET_DATE
                 0xC2 -> GET_CUR_CARD_CPZ
+                0xAC -> GET_RANDOM_NUMBER
                 _    -> ERR
 
 addNullChar     :: String -> ByteString
@@ -37,7 +41,9 @@ addNullChar str = on append C.pack str "\0"
 addLen :: ByteString -> ByteString
 addLen bs = let len = fromIntegral . (+(-1)) . length $ bs
             in cons len bs 
-  
+
+rand = newStdGen >>= (\g -> return $ take 33 (randoms g::[Word8]) )
+
 mooltipassStatus :: ByteString 
 mooltipassStatus = pack [0x01, 0xb9, 0b101]
 
@@ -59,7 +65,10 @@ getCurCardCpz = addLen bs
   where bs = pack $ [0xc2] ++ tt
         tt = take 8 $ iterate id 0xff
 
-    
+getRandomNumber = addLen bs
+  where bs = pack $ unsafePerformIO rand
+        
+  
 err :: ByteString
 err = pack [0x0, 0xff]
 
@@ -71,6 +80,7 @@ dispatchRequest c = case c of
                       GET_MOOLTIPASS_PARM -> getMooltipassParm
                       SET_DATE            -> setDate
                       GET_CUR_CARD_CPZ    -> getCurCardCpz
+                      GET_RANDOM_NUMBER   -> getRandomNumber
                       ERR                 -> err
 
         
