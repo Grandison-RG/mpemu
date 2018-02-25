@@ -18,6 +18,7 @@ application pending = do
       putStrLn "Request:"
       print . unpack $ msg
       let response = dispatchRequest . commandMap $ msg
-      WS.sendBinaryData conn response
-      putStrLn "Response:"
-      print . unpack $ response
+      result <- response
+      WS.sendBinaryData conn result
+      putStrLn "Result:"
+      print . unpack $ result

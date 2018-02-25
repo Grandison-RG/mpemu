@@ -1,7 +1,8 @@
 {-# LANGUAGE BinaryLiterals #-}
 module Dispatch
-  (dispatchRequest,commandMap)
-where
+  ( dispatchRequest,
+    commandMap
+  ) where
 
 import           Prelude                    hiding (length, tail)
 import           Data.ByteString.Lazy       hiding (putStrLn,iterate,take)
@@ -9,7 +10,6 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import           Data.Word(Word8)
 import           Data.Function(on)
 import           System.Random
-import           System.IO.Unsafe
 
 data Cmd = VERSION
          | MOOLTIPASS_STATUS
@@ -65,20 +65,22 @@ getCurCardCpz = addLen bs
   where bs = pack $ [0xc2] ++ tt
         tt = take 8 $ iterate id 0xff
 
-getRandomNumber = addLen bs
-  where bs = pack $ unsafePerformIO rand
-        
+getRandomNumber :: IO ByteString
+getRandomNumber = do
+  r <- rand
+  let res = addLen . pack $ r
+  return res      
   
 err :: ByteString
 err = pack [0x0, 0xff]
 
-dispatchRequest   :: Cmd -> ByteString
+dispatchRequest   :: Cmd -> IO ByteString
 dispatchRequest c = case c of
-                      MOOLTIPASS_STATUS   -> mooltipassStatus
-                      VERSION             -> emulVer
-                      END_MEMORYMGMT      -> memoryMgmt
-                      GET_MOOLTIPASS_PARM -> getMooltipassParm
-                      SET_DATE            -> setDate
-                      GET_CUR_CARD_CPZ    -> getCurCardCpz
+                      MOOLTIPASS_STATUS   -> return mooltipassStatus
+                      VERSION             -> return emulVer
+                      END_MEMORYMGMT      -> return memoryMgmt
+                      GET_MOOLTIPASS_PARM -> return getMooltipassParm
+                      SET_DATE            -> return setDate
+                      GET_CUR_CARD_CPZ    -> return getCurCardCpz
                       GET_RANDOM_NUMBER   -> getRandomNumber
-                      ERR                 -> err
+                      ERR                 -> return err
