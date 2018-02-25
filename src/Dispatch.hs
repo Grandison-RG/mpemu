@@ -42,7 +42,7 @@ addLen :: ByteString -> ByteString
 addLen bs = let len = fromIntegral . (+(-1)) . length $ bs
             in cons len bs 
 
-rand = newStdGen >>= (\g -> return $ take 33 (randoms g::[Word8]) )
+rand = newStdGen >>= (\g -> return $ take 32 (randoms g::[Word8]) )
 
 mooltipassStatus :: ByteString 
 mooltipassStatus = pack [0x01, 0xb9, 0b101]
@@ -62,13 +62,13 @@ setDate = pack [1, 0xbb, 0x01]
 
 getCurCardCpz :: ByteString
 getCurCardCpz = addLen bs
-  where bs = pack $ [0xc2] ++ tt
+  where bs = pack $ [0xC2] ++ tt
         tt = take 8 $ iterate id 0xff
 
 getRandomNumber :: IO ByteString
 getRandomNumber = do
   r <- rand
-  let res = addLen . pack $ r
+  let res = addLen . pack $ [0xAC] ++ r
   return res      
   
 err :: ByteString
