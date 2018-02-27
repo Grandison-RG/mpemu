@@ -30,5 +30,4 @@ addNewParentNode (ParentNode pn) state = case state of
   ListOfNodes xs -> case any (== Node "") xs of
     False -> ListOfNodes ((Node pn) : xs)
     True -> ListOfNodes (replace (Node "") (Node pn) xs) where
-      refl (Node x) = x
       replace a b = map (\x -> if (Node "" == x) then b else x)
