@@ -4,8 +4,8 @@ module MemoryModel
         ( Node (..),
           ParentNode (..),
           State (..),
-          addNewParentNode
-        ) 
+          addNewParentNode,
+        )
         where
 
 import Data.List ( sort )
@@ -27,8 +27,8 @@ data State a where
 addNewParentNode :: ParentNode String -> State String -> State String
 addNewParentNode (ParentNode pn) state = case state of
   ListOfParentNodes xs -> ListOfParentNodes . sort $ xs
-  ListOfNodes xs -> case any (== "") xs of
+  ListOfNodes xs -> case any (== Node "") xs of
     False -> ListOfNodes ((Node pn) : xs)
-    True -> ListOfNodes $ replace (Node "") (Node pn) xs where
+    True -> ListOfNodes (replace (Node "") (Node pn) xs) where
       refl (Node x) = x
-      replace a b = map (\x -> if ("" == x) then b else x)
+      replace a b = map (\x -> if (Node "" == x) then b else x)
