@@ -3,7 +3,9 @@
 module MemoryModel
         ( Node (..),
           ParentNode (..),
-          State (..))
+          State (..),
+          addNewParentNode
+        ) 
         where
 
 import Data.List ( sort )
@@ -18,21 +20,15 @@ data ParentNode a = ParentNode a deriving (Show, Eq, Ord)
 instance Functor ParentNode where
   fmap f (ParentNode x) = ParentNode (f x)
 
-instance Monoid a => Monoid (Node a) where
-  mempty = Node mempty
-  (Node n) `mappend` (Node m) = Node (n `mappend` m)
-
-instance Monoid a => Monoid (ParentNode a) where
-  mempty = ParentNode mempty
-  (ParentNode n) `mappend` (ParentNode m) = ParentNode (n `mappend` m)
-
-
 data State a where
   ListOfParentNodes :: [ParentNode a] -> State a
   ListOfNodes :: [Node a] -> State a
 
-sortListOfParentNode :: Ord a => [ParentNode a] -> [ParentNode a]
-sortListOfParentNode = sort
-
-{- addNewParentNode :: (Ord a, Monoid a) => ParentNode a -> State a -> State a
-addNewParentNode (ParentNode pn) state = -}
+addNewParentNode :: ParentNode String -> State String -> State String
+addNewParentNode (ParentNode pn) state = case state of
+  ListOfParentNodes xs -> ListOfParentNodes . sort $ xs
+  ListOfNodes xs -> case any (== "") xs of
+    False -> ListOfNodes ((Node pn) : xs)
+    True -> ListOfNodes $ replace (Node "") (Node pn) xs where
+      refl (Node x) = x
+      replace a b = map (\x -> if ("" == x) then b else x)
