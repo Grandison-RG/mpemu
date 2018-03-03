@@ -9,9 +9,12 @@ module MemoryModel
 
 data ParentNode = ParentNode
     {  service :: String
-     , nodeIndex :: Word
+     , nodeIndex :: Int
     }
     deriving (Show, Eq, Ord)
+
+mkParentNode :: String -> ParentNode
+mkParentNode srv = ParentNode srv (length srv)
 
 type ListOfParentNodes = [ParentNode]
 
