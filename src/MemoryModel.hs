@@ -17,4 +17,7 @@ type ListOfParentNodes = [ParentNode]
 appendParentNode :: ParentNode
                  -> ListOfParentNodes
                  -> ListOfParentNodes
-appendParentNode pn pns = pn : pns 
+appendParentNode pn []  = [pn]
+appendParentNode pn p:pns
+  | (service pn) <= (service p) = pn:p:pns
+  | _                           = p:(appendParentNode pn pns)
