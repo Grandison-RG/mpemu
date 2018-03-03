@@ -29,3 +29,11 @@ appendService :: String
               -> ListOfParentNodes
 appendService srv pns = let nodeIndex = length pns in
   appendParentNode (ParentNode srv nodeIndex) pns
+
+checkParentNodeByService :: String
+                         -> ListOfParentNodes
+                         -> Bool
+checkParentNodeByService srv [] = False
+checkParentNodeByService srv (p:pns)
+  | srv == (service p)          = True
+  | otherwise                   = checkParentNodeByService srv pns
