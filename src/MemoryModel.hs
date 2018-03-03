@@ -13,9 +13,6 @@ data ParentNode = ParentNode
     }
     deriving (Show, Eq, Ord)
 
-mkParentNode :: String -> ParentNode
-mkParentNode srv = ParentNode srv (length srv)
-
 type ListOfParentNodes = [ParentNode]
 
 appendParentNode :: ParentNode
@@ -23,5 +20,12 @@ appendParentNode :: ParentNode
                  -> ListOfParentNodes
 appendParentNode pn []  = [pn]
 appendParentNode pn (p:pns)
-  | (service pn) <= (service p) = pn:p:pns
+  | (service pn) < (service p)  = pn:p:pns
+  | (service pn) == (service p) = p:pns
   | otherwise                   = p:(appendParentNode pn pns)
+
+appendService :: String
+              -> ListOfParentNodes
+              -> ListOfParentNodes
+appendService srv pns = let nodeIndex = length pns in
+  appendParentNode (ParentNode srv nodeIndex) pns
