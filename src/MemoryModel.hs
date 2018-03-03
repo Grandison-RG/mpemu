@@ -1,10 +1,11 @@
 {-# LANGUAGE GADTs #-}
 
 module MemoryModel
-        ( ParentNode (..))
+        ( ParentNode (..),
+          ListOfParentNodes,
+          appendParentNode
+        )
         where
-
-import Data.List ( sort )
 
 data ParentNode = ParentNode
     {  service :: String
@@ -18,6 +19,6 @@ appendParentNode :: ParentNode
                  -> ListOfParentNodes
                  -> ListOfParentNodes
 appendParentNode pn []  = [pn]
-appendParentNode pn p:pns
+appendParentNode pn (p:pns)
   | (service pn) <= (service p) = pn:p:pns
-  | _                           = p:(appendParentNode pn pns)
+  | otherwise                   = p:(appendParentNode pn pns)
