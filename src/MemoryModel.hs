@@ -1,33 +1,20 @@
 {-# LANGUAGE GADTs #-}
 
 module MemoryModel
-        ( Node (..),
-          ParentNode (..),
-          State (..),
-          addNewParentNode,
-        )
+        ( ParentNode (..))
         where
 
 import Data.List ( sort )
 
-data Node a = Node a deriving (Show, Eq, Ord)
+data ParentNode = ParentNode
+    {  service :: String
+     , nodeIndex :: Word
+    }
+    deriving (Show, Eq, Ord)
 
-instance Functor Node where
-  fmap f (Node x) = Node (f x)
+type ListOfParentNodes = [ParentNode]
 
-data ParentNode a = ParentNode a deriving (Show, Eq, Ord)
-
-instance Functor ParentNode where
-  fmap f (ParentNode x) = ParentNode (f x)
-
-data State a where
-  ListOfParentNodes :: [ParentNode a] -> State a
-  ListOfNodes :: [Node a] -> State a
-
-addNewParentNode :: ParentNode String -> State String -> State String
-addNewParentNode (ParentNode pn) state = case state of
-  ListOfParentNodes xs -> ListOfParentNodes . sort $ xs
-  ListOfNodes xs -> case any (== Node "") xs of
-    False -> ListOfNodes ((Node pn) : xs)
-    True -> ListOfNodes (replace (Node "") (Node pn) xs) where
-      replace a b = map (\x -> if (Node "" == x) then b else x)
+appendParentNode :: ParentNode
+                 -> ListOfParentNodes
+                 -> ListOfParentNodes
+appendParentNode pn pns = pn : pns 
