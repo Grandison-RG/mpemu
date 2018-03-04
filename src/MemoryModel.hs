@@ -3,7 +3,9 @@
 module MemoryModel
         ( ParentNode (..),
           ListOfParentNodes,
-          appendParentNode
+          appendParentNode,
+          checkParentNodeByService,
+          appendService
         )
         where
 

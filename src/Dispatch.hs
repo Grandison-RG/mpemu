@@ -10,6 +10,8 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import           Data.Word(Word8)
 import           Data.Function(on)
 import           System.Random
+import           MemoryModel
+import           Control.Concurrent
 
 data Cmd = VERSION
          | MOOLTIPASS_STATUS
@@ -18,22 +20,26 @@ data Cmd = VERSION
          | SET_DATE
          | GET_CUR_CARD_CPZ
          | GET_RANDOM_NUMBER
+         | CONTEXT
+         | ADD_CONTEXT
          | ERR
   deriving Show
 
 secondByte :: ByteString -> Word8
 secondByte = (\(_:x:_) -> x) . unpack
 
-commandMap   :: ByteString -> Cmd
+commandMap :: ByteString -> Cmd
 commandMap c = case secondByte c of
-                0xA2 -> VERSION
-                0xB9 -> MOOLTIPASS_STATUS
-                0xD3 -> END_MEMORYMGMT
-                0xB2 -> GET_MOOLTIPASS_PARM
-                0xBB -> SET_DATE
-                0xC2 -> GET_CUR_CARD_CPZ
-                0xAC -> GET_RANDOM_NUMBER
-                _    -> ERR
+                 0xA2 -> VERSION
+                 0xB9 -> MOOLTIPASS_STATUS
+                 0xD3 -> END_MEMORYMGMT
+                 0xB2 -> GET_MOOLTIPASS_PARM
+                 0xBB -> SET_DATE
+                 0xC2 -> GET_CUR_CARD_CPZ
+                 0xAC -> GET_RANDOM_NUMBER
+                 0xA3 -> CONTEXT
+                 0xA9 -> ADD_CONTEXT
+                 _    -> ERR
 
 addNullChar     :: String -> ByteString
 addNullChar str = on append C.pack str "\0"
@@ -43,6 +49,12 @@ addLen bs = let len = fromIntegral . (+(-1)) . length $ bs
             in cons len bs 
 
 rand = newStdGen >>= (\g -> return $ take 32 (randoms g::[Word8]) )
+
+{--
+rand = do
+  stdGen <- newStdGen
+  return $ take 32 (randoms stdGen :: [Word8])
+--}
 
 mooltipassStatus :: ByteString 
 mooltipassStatus = pack [0x01, 0xb9, 0b101]
@@ -69,18 +81,36 @@ getRandomNumber :: IO ByteString
 getRandomNumber = do
   r <- rand
   let res = addLen . pack $ [0xAC] ++ r
-  return res      
+  return res
+
+getContext :: MVar ListOfParentNodes -> IO ByteString
+getContext state = do
+  pns <- readMVar state
+  let res = checkParentNodeByService "example.com" pns
+  case res of
+    True -> return $ pack [1, 0x01]
+    False -> return $ pack [1, 0x00]
+
+addContext :: MVar ListOfParentNodes -> IO ByteString
+addContext state = do
+  pns <- takeMVar state
+  putMVar state $ appendService "example.com" pns
+  return $ pack []
   
 err :: ByteString
 err = pack [0x0, 0xff]
 
-dispatchRequest   :: Cmd -> IO ByteString
-dispatchRequest c = case c of
-                      MOOLTIPASS_STATUS   -> return mooltipassStatus
-                      VERSION             -> return emulVer
-                      END_MEMORYMGMT      -> return memoryMgmt
-                      GET_MOOLTIPASS_PARM -> return getMooltipassParm
-                      SET_DATE            -> return setDate
-                      GET_CUR_CARD_CPZ    -> return getCurCardCpz
-                      GET_RANDOM_NUMBER   -> getRandomNumber
-                      ERR                 -> return err
+dispatchRequest :: MVar ListOfParentNodes
+                -> Cmd
+                -> IO ByteString
+dispatchRequest state c = case c of
+                            MOOLTIPASS_STATUS   -> return mooltipassStatus
+                            VERSION             -> return emulVer
+                            END_MEMORYMGMT      -> return memoryMgmt
+                            GET_MOOLTIPASS_PARM -> return getMooltipassParm
+                            SET_DATE            -> return setDate
+                            GET_CUR_CARD_CPZ    -> return getCurCardCpz
+                            GET_RANDOM_NUMBER   -> getRandomNumber
+                            CONTEXT             -> getContext state
+                            ADD_CONTEXT         -> addContext state
+                            ERR                 -> return err
