@@ -88,14 +88,14 @@ getContext state = do
   pns <- readMVar state
   let res = checkParentNodeByService "example.com" pns
   case res of
-    True -> return $ pack [1, 0x01]
-    False -> return $ pack [1, 0x00]
+    True  -> return $ pack [1, 0xA3, 0x01]
+    False -> return $ pack [1, 0xA3, 0x00]
 
 addContext :: MVar ListOfParentNodes -> IO ByteString
 addContext state = do
   pns <- takeMVar state
   putMVar state $ appendService "example.com" pns
-  return $ pack []
+  return $ pack [1, 0xA9, 0x01]
   
 err :: ByteString
 err = pack [0x0, 0xff]
