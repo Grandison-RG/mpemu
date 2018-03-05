@@ -83,18 +83,22 @@ getRandomNumber = do
   let res = addLen . pack $ [0xAC] ++ r
   return res
 
-getContext :: MVar ListOfParentNodes -> IO ByteString
-getContext state = do
+getContext :: MVar ListOfParentNodes
+              -> String
+              -> IO ByteString
+getContext state name = do
   pns <- readMVar state
-  let res = checkParentNodeByService "example.com" pns
+  let res = checkParentNodeByService name pns
   case res of
     True  -> return $ pack [1, 0xA3, 0x01]
     False -> return $ pack [1, 0xA3, 0x00]
 
-addContext :: MVar ListOfParentNodes -> IO ByteString
-addContext state = do
+addContext :: MVar ListOfParentNodes
+              -> String
+              -> IO ByteString
+addContext state name = do
   pns <- takeMVar state
-  putMVar state $ appendService "example.com" pns
+  putMVar state $ appendService name pns
   return $ pack [1, 0xA9, 0x01]
   
 err :: ByteString
@@ -102,15 +106,16 @@ err = pack [0x0, 0xff]
 
 dispatchRequest :: MVar ListOfParentNodes
                 -> Cmd
+                -> ByteString
                 -> IO ByteString
-dispatchRequest state c = case c of
-                            MOOLTIPASS_STATUS   -> return mooltipassStatus
-                            VERSION             -> return emulVer
-                            END_MEMORYMGMT      -> return memoryMgmt
-                            GET_MOOLTIPASS_PARM -> return getMooltipassParm
-                            SET_DATE            -> return setDate
-                            GET_CUR_CARD_CPZ    -> return getCurCardCpz
-                            GET_RANDOM_NUMBER   -> getRandomNumber
-                            CONTEXT             -> getContext state
-                            ADD_CONTEXT         -> addContext state
-                            ERR                 -> return err
+dispatchRequest state c input = case c of
+                                  MOOLTIPASS_STATUS   -> return mooltipassStatus
+                                  VERSION             -> return emulVer
+                                  END_MEMORYMGMT      -> return memoryMgmt
+                                  GET_MOOLTIPASS_PARM -> return getMooltipassParm
+                                  SET_DATE            -> return setDate
+                                  GET_CUR_CARD_CPZ    -> return getCurCardCpz
+                                  GET_RANDOM_NUMBER   -> getRandomNumber
+                                  CONTEXT             -> getContext state $ C.unpack input
+                                  ADD_CONTEXT         -> addContext state $ C.unpack input
+                                  ERR                 -> return err
