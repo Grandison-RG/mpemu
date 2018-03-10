@@ -9,7 +9,7 @@ import qualified Network.WebSockets         as WS
 import           Control.Monad (forever)
 import           Data.ByteString.Lazy       hiding (putStrLn)
 import           MemoryModel
-import           Control.Concurrent
+import           Control.Concurrent(MVar)
 
 application :: MVar Storage -> WS.ServerApp
 application state pending = do

@@ -9,9 +9,13 @@ import           Data.ByteString.Lazy       hiding (putStrLn,iterate,take)
 import qualified Data.ByteString.Lazy.Char8 as C
 import           Data.Word(Word8)
 import           Data.Function(on)
-import           System.Random
+import           System.Random(newStdGen, randoms)
 import           MemoryModel
-import           Control.Concurrent
+import           Control.Concurrent ( MVar
+                                    , putMVar
+                                    , readMVar
+                                    , takeMVar
+                                    )
 
 data Cmd = VERSION
          | MOOLTIPASS_STATUS

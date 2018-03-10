@@ -1,7 +1,7 @@
 module Main where
 
 import qualified Network.WebSockets as WS
-import Control.Concurrent
+import Control.Concurrent(MVar, newMVar)
 import Lib
 import MemoryModel
 

@@ -8,7 +8,11 @@ module MemoryModel
   )
 where
 
-import Control.Lens
+import Control.Lens ( makeLenses
+                    , (&)
+                    , (^.)
+                    , (%~)
+                    )
 
 type ServiceName = String
 
