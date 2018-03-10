@@ -92,7 +92,7 @@ getContext :: MVar Storage
               -> IO ByteString
 getContext state name = do
   storage <- readMVar state
-  let res = True --checkParentNodeByService name storage
+  let res = checkParentNodeByService name storage
   case res of
     True  -> return $ pack [1, 0xA3, 0x01]
     False -> return $ pack [1, 0xA3, 0x00]
@@ -102,7 +102,7 @@ addContext :: MVar Storage
               -> IO ByteString
 addContext state name = do
   storage <- takeMVar state
-  putMVar state $ storage --appendService name storage
+  putMVar state $ appendService name storage
   return $ pack [1, 0xA9, 0x01]
   
 err :: ByteString

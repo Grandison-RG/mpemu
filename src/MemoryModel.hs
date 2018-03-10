@@ -58,13 +58,6 @@ appendService name st = (st & parentNodes %~ appendParentNode newNode)
                                         , _service = name
                                         , _pNodeIndex = st ^. lastIndex
                                         }
-{-
-appendService :: ServiceName
-              -> [ParentNode]
-              -> [ParentNode]
-appendService srv pns = let nodeIndex = length pns in
-  appendParentNode (ParentNode srv nodeIndex) pns
--}
 
 checkParentNodeByService :: ServiceName
                          -> Storage
@@ -72,12 +65,3 @@ checkParentNodeByService :: ServiceName
 checkParentNodeByService name st =
   any hasName $ st ^. parentNodes
   where hasName pn = pn ^. service == name
-
-{-
-checkParentNodeByService :: ServiceName
-                         -> Storage
-                         -> Bool
-checkParentNodeByService srv st
-  | srv == (service p)          = True
-  | otherwise                   = checkParentNodeByService srv pns
--}
