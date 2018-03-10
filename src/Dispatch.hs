@@ -83,28 +83,28 @@ getRandomNumber = do
   let res = addLen . pack $ [0xAC] ++ r
   return res
 
-getContext :: MVar ListOfParentNodes
+getContext :: MVar Storage
               -> String
               -> IO ByteString
 getContext state name = do
-  pns <- readMVar state
-  let res = checkParentNodeByService name pns
+  storage <- readMVar state
+  let res = True --checkParentNodeByService name storage
   case res of
     True  -> return $ pack [1, 0xA3, 0x01]
     False -> return $ pack [1, 0xA3, 0x00]
 
-addContext :: MVar ListOfParentNodes
+addContext :: MVar Storage
               -> String
               -> IO ByteString
 addContext state name = do
-  pns <- takeMVar state
-  putMVar state $ appendService name pns
+  storage <- takeMVar state
+  putMVar state $ storage --appendService name storage
   return $ pack [1, 0xA9, 0x01]
   
 err :: ByteString
 err = pack [0x0, 0xff]
 
-dispatchRequest :: MVar ListOfParentNodes
+dispatchRequest :: MVar Storage
                 -> Cmd
                 -> ByteString
                 -> IO ByteString

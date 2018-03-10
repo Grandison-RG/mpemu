@@ -1,22 +1,44 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module MemoryModel
-        ( ParentNode (..),
+        ( {-ParentNode (..),
           ListOfParentNodes,
           appendParentNode,
           checkParentNodeByService,
-          appendService
+          appendService -}
+          Storage (..)
         )
         where
 
+import Control.Lens
+
+type ServiceName = String
+
+data ChildNode = ChildNode
+  { _login :: String
+  , _cNodeIndex :: Int
+  }
+  deriving (Show, Eq, Ord)
+
 data ParentNode = ParentNode
-    {  service :: String
-     , nodeIndex :: Int
+    { _childNodes :: [ChildNode]
+     , _service :: String
+     , _pNodeIndex :: Int
     }
     deriving (Show, Eq, Ord)
 
-type ListOfParentNodes = [ParentNode]
+data Storage = Storage
+  { _parentNodes :: [ParentNode]
+  , _lastIndex :: Int
+  , _context :: ServiceName
+  }
 
+makeLenses ''ChildNode
+makeLenses ''ParentNode
+makeLenses ''Storage
+
+{-
 appendParentNode :: ParentNode
                  -> ListOfParentNodes
                  -> ListOfParentNodes
@@ -39,3 +61,4 @@ checkParentNodeByService srv [] = False
 checkParentNodeByService srv (p:pns)
   | srv == (service p)          = True
   | otherwise                   = checkParentNodeByService srv pns
+-}

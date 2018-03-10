@@ -11,7 +11,7 @@ import           Data.ByteString.Lazy       hiding (putStrLn)
 import           MemoryModel
 import           Control.Concurrent
 
-application :: MVar ListOfParentNodes -> WS.ServerApp
+application :: MVar Storage -> WS.ServerApp
 application state pending = do
     conn <- WS.acceptRequest pending
     WS.forkPingThread conn 30

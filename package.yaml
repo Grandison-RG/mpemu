@@ -17,6 +17,7 @@ dependencies:
 - bytestring
 - websockets
 - random
+- lens
 
 library:
   source-dirs: src

@@ -5,8 +5,12 @@ import Control.Concurrent
 import Lib
 import MemoryModel
 
-memory :: ListOfParentNodes
-memory = []
+memory :: Storage
+memory = Storage
+  { _parentNodes = []
+  , _lastIndex = 0
+  , _context = ""
+  }
 
 main :: IO ()
 main = do
