@@ -2,14 +2,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module MemoryModel
-        ( {-ParentNode (..),
-          ListOfParentNodes,
-          appendParentNode,
-          checkParentNodeByService,
-          appendService -}
-          Storage (..)
-        )
-        where
+  ( Storage (..)
+  , checkParentNodeByService
+  , appendService
+  )
+where
 
 import Control.Lens
 
@@ -38,27 +35,45 @@ makeLenses ''ChildNode
 makeLenses ''ParentNode
 makeLenses ''Storage
 
-{-
 appendParentNode :: ParentNode
-                 -> ListOfParentNodes
-                 -> ListOfParentNodes
+                 -> [ParentNode]
+                 -> [ParentNode]
 appendParentNode pn []  = [pn]
 appendParentNode pn (p:pns)
-  | (service pn) < (service p)  = pn:p:pns
-  | (service pn) == (service p) = p:pns
+  | (_service pn) < (_service p)  = pn:p:pns
+  | (_service pn) == (_service p) = p:pns
   | otherwise                   = p:(appendParentNode pn pns)
 
-appendService :: String
-              -> ListOfParentNodes
-              -> ListOfParentNodes
+appendService :: ServiceName
+              -> Storage
+              -> Storage
+appendService name st = (st & parentNodes %~ appendParentNode newNode)
+                        & lastIndex %~ (+1)
+                        where newNode = ParentNode
+                                        { _childNodes = []
+                                        , _service = name
+                                        , _pNodeIndex = st ^. lastIndex
+                                        }
+{-
+appendService :: ServiceName
+              -> [ParentNode]
+              -> [ParentNode]
 appendService srv pns = let nodeIndex = length pns in
   appendParentNode (ParentNode srv nodeIndex) pns
+-}
 
-checkParentNodeByService :: String
-                         -> ListOfParentNodes
+checkParentNodeByService :: ServiceName
+                         -> Storage
                          -> Bool
-checkParentNodeByService srv [] = False
-checkParentNodeByService srv (p:pns)
+checkParentNodeByService name st =
+  any hasName $ st ^. parentNodes
+  where hasName pn = pn ^. service == name
+
+{-
+checkParentNodeByService :: ServiceName
+                         -> Storage
+                         -> Bool
+checkParentNodeByService srv st
   | srv == (service p)          = True
   | otherwise                   = checkParentNodeByService srv pns
 -}
