@@ -26,6 +26,7 @@ data Cmd = VERSION
          | GET_RANDOM_NUMBER
          | CONTEXT
          | ADD_CONTEXT
+         | SET_LOGIN
          | ERR
   deriving Show
 
@@ -43,6 +44,7 @@ commandMap c = case secondByte c of
                  0xAC -> GET_RANDOM_NUMBER
                  0xA3 -> CONTEXT
                  0xA9 -> ADD_CONTEXT
+                 0xA6 -> SET_LOGIN
                  _    -> ERR
 
 addNullChar     :: String -> ByteString
@@ -91,7 +93,7 @@ getContext :: MVar Storage
               -> String
               -> IO ByteString
 getContext state name = do
-  storage <- readMVar state
+  storage <- takeMVar state
   let res = checkParentNodeByService name storage
   case res of
     True  -> return $ pack [1, 0xA3, 0x01]
@@ -104,6 +106,11 @@ addContext state name = do
   storage <- takeMVar state
   putMVar state $ appendService name storage
   return $ pack [1, 0xA9, 0x01]
+
+setLogin :: MVar Storage
+         -> String
+         -> IO ByteString
+setLogin state login = return $ pack $ [1, 0x01]
   
 err :: ByteString
 err = pack [0x0, 0xff]
@@ -122,4 +129,5 @@ dispatchRequest state c input = case c of
                                   GET_RANDOM_NUMBER   -> getRandomNumber
                                   CONTEXT             -> getContext state $ C.unpack input
                                   ADD_CONTEXT         -> addContext state $ C.unpack input
+                                  SET_LOGIN           -> setLogin state $ C.unpack input
                                   ERR                 -> return err
