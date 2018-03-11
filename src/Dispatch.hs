@@ -93,7 +93,7 @@ getContext :: MVar Storage
               -> String
               -> IO ByteString
 getContext state name = do
-  storage <- takeMVar state
+  storage <- readMVar state
   let res = checkParentNodeByService name storage
   case res of
     True  -> return $ pack [1, 0xA3, 0x01]
