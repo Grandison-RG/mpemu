@@ -5,6 +5,7 @@ module MemoryModel
   ( Storage (..)
   , checkParentNodeByService
   , appendService
+  , addLoginCurrent
   )
 where
 
@@ -13,6 +14,8 @@ import Control.Lens ( makeLenses
                     , (^.)
                     , (%~)
                     )
+
+import ZipperList
 
 type ServiceName = String
 
@@ -65,3 +68,8 @@ checkParentNodeByService :: ServiceName
 checkParentNodeByService name st =
   any hasName $ st ^. parentNodes
   where hasName pn = pn ^. service == name
+
+addLoginCurrent :: Storage
+                -> String
+                -> Storage
+addLoginCurrent st login = undefined

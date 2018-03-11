@@ -110,7 +110,10 @@ addContext state name = do
 setLogin :: MVar Storage
          -> String
          -> IO ByteString
-setLogin state login = return $ pack $ [1, 0x01]
+setLogin state login = do
+  storage <- takeMVar state
+  putMVar state $ addLoginCurrent storage login
+  return $ pack $ [1, 0x01]
   
 err :: ByteString
 err = pack [0x0, 0xff]
