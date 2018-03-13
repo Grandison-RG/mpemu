@@ -15,7 +15,21 @@ import Control.Lens ( makeLenses
                     , (%~)
                     )
 
+{-
 import ZipperList
+
+type ParentNodes = ZipperList ParentNode
+
+focusParentNodeByService :: ServiceName
+                         -> ParentNodes
+                         -> ParentNodes
+focusParentNodeByService _ _ = undefined
+
+appendParentNode' :: ParentNode
+                  -> ParentNodes
+                  -> ParentNodes
+appendParentNode' _ _ = undefined
+-}
 
 type ServiceName = String
 
@@ -41,18 +55,6 @@ data Storage = Storage
 makeLenses ''ChildNode
 makeLenses ''ParentNode
 makeLenses ''Storage
-
-type ParentNodes = ZipperList ParentNode
-
-focusParentNodeByService :: ServiceName
-                         -> ParentNodes
-                         -> ParentNodes
-focusParentNodeByService _ _ = undefined
-
-appendParentNode' :: ParentNode
-                  -> ParentNodes
-                  -> ParentNodes
-appendParentNode' _ _ = undefined
 
 appendParentNode :: ParentNode
                  -> [ParentNode]
