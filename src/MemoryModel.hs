@@ -83,7 +83,25 @@ checkParentNodeByService name st =
   any hasName $ st ^. parentNodes
   where hasName pn = pn ^. service == name
 
+
+updateLogin :: String
+            -> ServiceName
+            -> [ParentNode]
+            -> [ParentNode]
+updateLogin ln current pns =
+  map (\p -> if (p ^. service == current)
+             then (p & childNodes %~ appendChild)
+             else p) pns
+  where appendChild cns = if (any (\c -> c ^. login == ln) cns)
+                          then cns
+                          else cns ++ [c]
+                          where c = ChildNode
+                                    { _login = ln
+                                    , _cNodeIndex = length cns
+                                    }
+
 addLoginCurrent :: Storage
                 -> String
                 -> Storage
-addLoginCurrent st login = undefined
+addLoginCurrent st login =
+  st & parentNodes %~ updateLogin login (st ^. context)
