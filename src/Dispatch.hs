@@ -113,7 +113,7 @@ setLogin :: MVar Storage
 setLogin state login = do
   storage <- takeMVar state
   putMVar state $ addLoginCurrent storage login
-  return $ pack $ [1, 0x01]
+  return $ pack $ [1, 0xA6, 0x01]
   
 err :: ByteString
 err = pack [0x0, 0xff]
