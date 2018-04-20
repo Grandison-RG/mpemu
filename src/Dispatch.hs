@@ -1,7 +1,8 @@
 {-# LANGUAGE BinaryLiterals #-}
 module Dispatch
-  ( dispatchRequest,
-    commandMap
+  ( dispatchRequest
+  , dispatchRequest'
+  ,  commandMap
   ) where
 
 import           Prelude                    hiding (length, tail)
@@ -16,6 +17,10 @@ import           Control.Concurrent ( MVar
                                     , readMVar
                                     , takeMVar
                                     )
+import           Control.Monad.Trans.State
+import           Control.Monad.Trans.Class
+
+type StateIO a = StateT Storage IO a
 
 data Cmd = VERSION
          | MOOLTIPASS_STATUS
@@ -91,11 +96,26 @@ getRandomNumber = do
   let res = addLen . pack $ [0xAC] ++ r
   return res
 
+getRandomNumber' :: StateIO ByteString
+getRandomNumber' = do
+  r <- lift rand
+  let res = addLen . pack $ [0xAC] ++ r
+  return res
+
 getContext :: MVar Storage
               -> String
               -> IO ByteString
 getContext state name = do
   storage <- readMVar state
+  let res = checkParentNodeByService name storage
+  case res of
+    True  -> return $ pack [1, 0xA3, 0x01]
+    False -> return $ pack [1, 0xA3, 0x00]
+
+getContext' :: String
+            -> StateIO ByteString
+getContext' name = do
+  storage <- get
   let res = checkParentNodeByService name storage
   case res of
     True  -> return $ pack [1, 0xA3, 0x01]
@@ -109,16 +129,51 @@ addContext state name = do
   putMVar state $ appendService name storage
   return $ pack [1, 0xA9, 0x01]
 
+addContext' :: String
+               -> StateIO ByteString
+addContext' name = do
+  storage <- get
+  put $ appendService name storage
+  return $ pack [1, 0xA9, 0x01]
+
+
 setLogin :: MVar Storage
          -> String
          -> IO ByteString
 setLogin state login = do
   storage <- takeMVar state
   putMVar state $ addLoginCurrent storage login
-  return $ pack $ [1, 0xA6, 0x01]
+  return $ pack $ [0x01, 0xA6, 0x01]
+
+setLogin' :: String
+          -> StateIO ByteString
+setLogin' login = do
+  storage <- get
+  put $ addLoginCurrent storage login
+  return . pack $ [0x01, 0xA6, 0x01]
   
 err :: ByteString
 err = pack [0x0, 0xff]
+
+dispatchRequest' :: Cmd
+                 -> ByteString
+                 -> StateIO ByteString
+dispatchRequest' c input =
+  case c of
+    MOOLTIPASS_STATUS   -> return mooltipassStatus
+    VERSION             -> return emulVer
+    END_MEMORYMGMT      -> return memoryMgmt
+    GET_MOOLTIPASS_PARM -> return getMooltipassParm
+    SET_DATE            -> return setDate
+    GET_CUR_CARD_CPZ    -> return getCurCardCpz
+    GET_RANDOM_NUMBER   -> getRandomNumber'
+    CONTEXT             -> getContext' strInput
+    ADD_CONTEXT         -> addContext' strInput
+    SET_LOGIN           -> setLogin'   strInput
+    CHECK_PASSWORD      -> return . pack $ [0x01, 0xA8, 0x00]
+    ERR                 -> return err
+  where strInput :: String
+        strInput = C.unpack input
 
 dispatchRequest :: MVar Storage
                 -> Cmd
@@ -136,5 +191,6 @@ dispatchRequest state c input =
     CONTEXT             -> getContext state $ C.unpack input
     ADD_CONTEXT         -> addContext state $ C.unpack input
     SET_LOGIN           -> setLogin state $ C.unpack input
-    CHECK_PASSWORD      -> return err
+    --TODO
+    CHECK_PASSWORD      -> return . pack $ [0x01, 0xA8, 0x00]
     ERR                 -> return err
