@@ -18,6 +18,7 @@ dependencies:
 - websockets
 - random
 - lens
+- transformers
 
 library:
   source-dirs: src

@@ -155,6 +155,10 @@ setLogin' login = do
 err :: ByteString
 err = pack [0x0, 0xff]
 
+checkPassword' :: String
+               -> StateIO ByteString
+checkPassword' password = return . pack $ [0x01, 0xA8, 0x00]
+
 dispatchRequest' :: Cmd
                  -> ByteString
                  -> StateIO ByteString
@@ -167,10 +171,10 @@ dispatchRequest' c input =
     SET_DATE            -> return setDate
     GET_CUR_CARD_CPZ    -> return getCurCardCpz
     GET_RANDOM_NUMBER   -> getRandomNumber'
-    CONTEXT             -> getContext' strInput
-    ADD_CONTEXT         -> addContext' strInput
-    SET_LOGIN           -> setLogin'   strInput
-    CHECK_PASSWORD      -> return . pack $ [0x01, 0xA8, 0x00]
+    CONTEXT             -> getContext'    strInput
+    ADD_CONTEXT         -> addContext'    strInput
+    SET_LOGIN           -> setLogin'      strInput
+    CHECK_PASSWORD      -> checkPassword' strInput
     ERR                 -> return err
   where strInput :: String
         strInput = C.unpack input
