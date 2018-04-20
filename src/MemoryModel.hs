@@ -6,14 +6,15 @@ module MemoryModel
   , checkParentNodeByService
   , appendService
   , addLoginCurrent
+  , parentNodes
+  , childNodes
+  , login
+  , cNodeIndex
   )
 where
 
-import Control.Lens ( makeLenses
-                    , (&)
-                    , (^.)
-                    , (%~)
-                    )
+import Control.Lens
+import Data.Function (on)
 
 {-
 import ZipperList
@@ -35,6 +36,7 @@ type ServiceName = String
 
 data ChildNode = ChildNode
   { _login :: String
+  , _password :: Maybe String
   , _cNodeIndex :: Int
   }
   deriving (Show, Eq, Ord)
@@ -61,9 +63,10 @@ appendParentNode :: ParentNode
                  -> [ParentNode]
 appendParentNode pn []  = [pn]
 appendParentNode pn (p:pns)
-  | (_service pn) < (_service p)  = pn:p:pns
-  | (_service pn) == (_service p) = p:pns
+  | onService (<) pn p = pn:p:pns
+  | onService (==) pn p = p:pns
   | otherwise                   = p:(appendParentNode pn pns)
+  where onService predicate = predicate `on` (^. service)
 
 appendService :: ServiceName
               -> Storage
@@ -98,6 +101,7 @@ updateLogin ln current pns =
                           where c = ChildNode
                                     { _login = ln
                                     , _cNodeIndex = length cns
+                                    , _password = Nothing
                                     }
 
 addLoginCurrent :: Storage

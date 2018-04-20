@@ -27,6 +27,7 @@ data Cmd = VERSION
          | CONTEXT
          | ADD_CONTEXT
          | SET_LOGIN
+         | CHECK_PASSWORD
          | ERR
   deriving Show
 
@@ -45,6 +46,7 @@ commandMap c = case secondByte c of
                  0xA3 -> CONTEXT
                  0xA9 -> ADD_CONTEXT
                  0xA6 -> SET_LOGIN
+                 0xA8 -> CHECK_PASSWORD
                  _    -> ERR
 
 addNullChar     :: String -> ByteString
@@ -122,15 +124,17 @@ dispatchRequest :: MVar Storage
                 -> Cmd
                 -> ByteString
                 -> IO ByteString
-dispatchRequest state c input = case c of
-                                  MOOLTIPASS_STATUS   -> return mooltipassStatus
-                                  VERSION             -> return emulVer
-                                  END_MEMORYMGMT      -> return memoryMgmt
-                                  GET_MOOLTIPASS_PARM -> return getMooltipassParm
-                                  SET_DATE            -> return setDate
-                                  GET_CUR_CARD_CPZ    -> return getCurCardCpz
-                                  GET_RANDOM_NUMBER   -> getRandomNumber
-                                  CONTEXT             -> getContext state $ C.unpack input
-                                  ADD_CONTEXT         -> addContext state $ C.unpack input
-                                  SET_LOGIN           -> setLogin state $ C.unpack input
-                                  ERR                 -> return err
+dispatchRequest state c input =
+  case c of
+    MOOLTIPASS_STATUS   -> return mooltipassStatus
+    VERSION             -> return emulVer
+    END_MEMORYMGMT      -> return memoryMgmt
+    GET_MOOLTIPASS_PARM -> return getMooltipassParm
+    SET_DATE            -> return setDate
+    GET_CUR_CARD_CPZ    -> return getCurCardCpz
+    GET_RANDOM_NUMBER   -> getRandomNumber
+    CONTEXT             -> getContext state $ C.unpack input
+    ADD_CONTEXT         -> addContext state $ C.unpack input
+    SET_LOGIN           -> setLogin state $ C.unpack input
+    CHECK_PASSWORD      -> return err
+    ERR                 -> return err
