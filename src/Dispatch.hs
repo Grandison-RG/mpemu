@@ -32,6 +32,7 @@ data Cmd = VERSION
          | CONTEXT
          | ADD_CONTEXT
          | SET_LOGIN
+         | SET_PASSWORD
          | CHECK_PASSWORD
          | ERR
   deriving Show
@@ -51,6 +52,7 @@ commandMap c = case secondByte c of
                  0xA3 -> CONTEXT
                  0xA9 -> ADD_CONTEXT
                  0xA6 -> SET_LOGIN
+                 0xA7 -> SET_PASSWORD
                  0xA8 -> CHECK_PASSWORD
                  _    -> ERR
 
@@ -157,7 +159,8 @@ err = pack [0x0, 0xff]
 
 checkPassword' :: String
                -> StateIO ByteString
-checkPassword' password = return . pack $ [0x01, 0xA8, 0x00]
+checkPassword' password = do
+  return . pack $ [0x01, 0xA8, 0x00]
 
 dispatchRequest' :: Cmd
                  -> ByteString
@@ -196,5 +199,6 @@ dispatchRequest state c input =
     ADD_CONTEXT         -> addContext state $ C.unpack input
     SET_LOGIN           -> setLogin state $ C.unpack input
     --TODO
+    SET_PASSWORD        -> return . pack $ [0x01, 0xA7, 0x01]
     CHECK_PASSWORD      -> return . pack $ [0x01, 0xA8, 0x00]
     ERR                 -> return err
