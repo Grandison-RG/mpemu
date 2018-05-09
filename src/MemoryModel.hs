@@ -104,6 +104,20 @@ updateLogin ln current pns =
                                     , _password = Nothing
                                     }
 
+
+activeUpdateParent :: (ParentNode -> ParentNode)
+                   -> Storage -> Storage
+activeUpdateParent f st = parentNodes.traversed.(filtered active) %~ f $ st
+  where active pnode = pnode^.service == current
+        current = st^.context._1
+
+activeUpdateChild :: Storage
+                  -> (ChildNode -> ChildNode)
+                  -> ParentNode -> ParentNode
+activeUpdateChild st f = childNodes.traversed.(filtered active) %~ f
+  where active cnode = cnode^.login == current
+        current = st^.context._2
+
 addLoginCurrent :: Storage
                 -> String
                 -> Storage
