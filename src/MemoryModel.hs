@@ -111,7 +111,7 @@ addLoginCurrent newLogin = activeUpdateParent $
   childNodes.filtered' %~ appendChild
   where
     filtered' = filtered $
-      any (\c -> c^.login /= newLogin)
+      all (\c -> c^.login /= newLogin)
     appendChild cns = cns ++ [c]
       where c = ChildNode
               { _login = newLogin
