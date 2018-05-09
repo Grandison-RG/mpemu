@@ -71,13 +71,14 @@ appendParentNode pn (p:pns)
 appendService :: ServiceName
               -> Storage
               -> Storage
-appendService name st = st & parentNodes %~ appendParentNode newNode
-                        & lastIndex %~ (+1)
-                        where newNode = ParentNode
-                                        { _childNodes = []
-                                        , _service = name
-                                        , _pNodeIndex = st ^. lastIndex
-                                        }
+appendService name st = st
+  & parentNodes %~ appendParentNode newNode
+  & lastIndex %~ (+1)
+  where newNode = ParentNode
+                  { _childNodes = []
+                  , _service = name
+                  , _pNodeIndex = st ^. lastIndex
+                  }
 
 checkParentNodeByService :: ServiceName
                          -> Storage
@@ -86,48 +87,34 @@ checkParentNodeByService name st =
   any hasName $ st ^. parentNodes
   where hasName pn = pn ^. service == name
 
-
-updateLogin :: String
-            -> ServiceName
-            -> [ParentNode]
-            -> [ParentNode]
-updateLogin ln current pns =
-  map (\p -> if (p ^. service == current)
-             then (p & childNodes %~ appendChild)
-             else p) pns
-  where appendChild cns = if (any (\c -> c ^. login == ln) cns)
-                          then cns
-                          else cns ++ [c]
-                          where c = ChildNode
-                                    { _login = ln
-                                    , _cNodeIndex = length cns
-                                    , _password = Nothing
-                                    }
-
-
 activeUpdateParent :: (ParentNode -> ParentNode)
-                   -> Storage -> Storage
+                   -> (Storage -> Storage)
 activeUpdateParent f st = parentNodes.traversed.(filtered active) %~ f $ st
   where active pnode = pnode^.service == current
         current = st^.context._1
 
 activeUpdateChild :: Storage
                   -> (ChildNode -> ChildNode)
-                  -> ParentNode -> ParentNode
+                  -> (ParentNode -> ParentNode)
 activeUpdateChild st f = childNodes.traversed.(filtered active) %~ f
   where active cnode = cnode^.login == current
         current = st^.context._2
 
-addLoginCurrent :: Storage
-                -> String
-                -> Storage
-addLoginCurrent st login =
-  st & parentNodes %~ updateLogin login (fst $ st ^. context)
+activeUpdate :: (ChildNode -> ChildNode)
+             -> (Storage -> Storage)
+activeUpdate f st = activeUpdateParent (activeUpdateChild st f) $ st
 
-updatePassword = undefined
-
-setPassword :: Storage
-            -> String
-            -> Storage
-setPassword st pw =
-  st & parentNodes %~ updatePassword pw (fst $ st ^. context)
+addLoginCurrent :: String
+                 -> Storage
+                 -> Storage
+addLoginCurrent newLogin = activeUpdateParent $
+  childNodes.filtered' %~ appendChild
+  where
+    filtered' = filtered $
+      any (\c -> c^.login /= newLogin)
+    appendChild cns = cns ++ [c]
+      where c = ChildNode
+              { _login = newLogin
+              , _cNodeIndex = length cns
+              , _password = Nothing
+              }
