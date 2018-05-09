@@ -9,7 +9,7 @@ memory :: Storage
 memory = Storage
   { _parentNodes = []
   , _lastIndex = 0
-  , _context = ""
+  , _context = ("", "")
   }
 
 main :: IO ()

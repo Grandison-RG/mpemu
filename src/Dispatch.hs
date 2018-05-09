@@ -1,7 +1,6 @@
 {-# LANGUAGE BinaryLiterals #-}
 module Dispatch
   ( dispatchRequest
-  , dispatchRequest'
   ,  commandMap
   ) where
 
@@ -92,64 +91,31 @@ getCurCardCpz = addLen bs
   where bs = pack $ [0xC2] ++ tt
         tt = take 8 $ iterate id 0xff
 
-getRandomNumber :: IO ByteString
+getRandomNumber :: StateIO ByteString
 getRandomNumber = do
-  r <- rand
-  let res = addLen . pack $ [0xAC] ++ r
-  return res
-
-getRandomNumber' :: StateIO ByteString
-getRandomNumber' = do
   r <- lift rand
   let res = addLen . pack $ [0xAC] ++ r
   return res
 
-getContext :: MVar Storage
-              -> String
-              -> IO ByteString
-getContext state name = do
-  storage <- readMVar state
-  let res = checkParentNodeByService name storage
-  case res of
-    True  -> return $ pack [1, 0xA3, 0x01]
-    False -> return $ pack [1, 0xA3, 0x00]
-
-getContext' :: String
+getContext :: String
             -> StateIO ByteString
-getContext' name = do
+getContext name = do
   storage <- get
   let res = checkParentNodeByService name storage
   case res of
     True  -> return $ pack [1, 0xA3, 0x01]
     False -> return $ pack [1, 0xA3, 0x00]
 
-addContext :: MVar Storage
-              -> String
-              -> IO ByteString
-addContext state name = do
-  storage <- takeMVar state
-  putMVar state $ appendService name storage
-  return $ pack [1, 0xA9, 0x01]
-
-addContext' :: String
+addContext :: String
                -> StateIO ByteString
-addContext' name = do
+addContext name = do
   storage <- get
   put $ appendService name storage
   return $ pack [1, 0xA9, 0x01]
 
-
-setLogin :: MVar Storage
-         -> String
-         -> IO ByteString
-setLogin state login = do
-  storage <- takeMVar state
-  putMVar state $ addLoginCurrent storage login
-  return $ pack $ [0x01, 0xA6, 0x01]
-
-setLogin' :: String
+setLogin :: String
           -> StateIO ByteString
-setLogin' login = do
+setLogin login = do
   storage <- get
   put $ addLoginCurrent storage login
   return . pack $ [0x01, 0xA6, 0x01]
@@ -157,36 +123,15 @@ setLogin' login = do
 err :: ByteString
 err = pack [0x0, 0xff]
 
-checkPassword' :: String
+checkPassword :: String
                -> StateIO ByteString
-checkPassword' password = do
+checkPassword password = do
   return . pack $ [0x01, 0xA8, 0x00]
 
-dispatchRequest' :: Cmd
+dispatchRequest :: Cmd
                  -> ByteString
                  -> StateIO ByteString
-dispatchRequest' c input =
-  case c of
-    MOOLTIPASS_STATUS   -> return mooltipassStatus
-    VERSION             -> return emulVer
-    END_MEMORYMGMT      -> return memoryMgmt
-    GET_MOOLTIPASS_PARM -> return getMooltipassParm
-    SET_DATE            -> return setDate
-    GET_CUR_CARD_CPZ    -> return getCurCardCpz
-    GET_RANDOM_NUMBER   -> getRandomNumber'
-    CONTEXT             -> getContext'    strInput
-    ADD_CONTEXT         -> addContext'    strInput
-    SET_LOGIN           -> setLogin'      strInput
-    CHECK_PASSWORD      -> checkPassword' strInput
-    ERR                 -> return err
-  where strInput :: String
-        strInput = C.unpack input
-
-dispatchRequest :: MVar Storage
-                -> Cmd
-                -> ByteString
-                -> IO ByteString
-dispatchRequest state c input =
+dispatchRequest c input =
   case c of
     MOOLTIPASS_STATUS   -> return mooltipassStatus
     VERSION             -> return emulVer
@@ -195,10 +140,10 @@ dispatchRequest state c input =
     SET_DATE            -> return setDate
     GET_CUR_CARD_CPZ    -> return getCurCardCpz
     GET_RANDOM_NUMBER   -> getRandomNumber
-    CONTEXT             -> getContext state $ C.unpack input
-    ADD_CONTEXT         -> addContext state $ C.unpack input
-    SET_LOGIN           -> setLogin state $ C.unpack input
-    --TODO
-    SET_PASSWORD        -> return . pack $ [0x01, 0xA7, 0x01]
-    CHECK_PASSWORD      -> return . pack $ [0x01, 0xA8, 0x00]
+    CONTEXT             -> getContext    strInput
+    ADD_CONTEXT         -> addContext    strInput
+    SET_LOGIN           -> setLogin      strInput
+    CHECK_PASSWORD      -> checkPassword strInput
     ERR                 -> return err
+  where strInput :: String
+        strInput = C.unpack input

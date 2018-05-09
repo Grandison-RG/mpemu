@@ -51,7 +51,7 @@ data ParentNode = ParentNode
 data Storage = Storage
   { _parentNodes :: [ParentNode]
   , _lastIndex :: Int
-  , _context :: ServiceName
+  , _context :: (ServiceName, String)
   }
 
 makeLenses ''ChildNode
@@ -71,7 +71,7 @@ appendParentNode pn (p:pns)
 appendService :: ServiceName
               -> Storage
               -> Storage
-appendService name st = (st & parentNodes %~ appendParentNode newNode)
+appendService name st = st & parentNodes %~ appendParentNode newNode
                         & lastIndex %~ (+1)
                         where newNode = ParentNode
                                         { _childNodes = []
@@ -108,4 +108,12 @@ addLoginCurrent :: Storage
                 -> String
                 -> Storage
 addLoginCurrent st login =
-  st & parentNodes %~ updateLogin login (st ^. context)
+  st & parentNodes %~ updateLogin login (fst $ st ^. context)
+
+updatePassword = undefined
+
+setPassword :: Storage
+            -> String
+            -> Storage
+setPassword st pw =
+  st & parentNodes %~ updatePassword pw (fst $ st ^. context)

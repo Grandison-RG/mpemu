@@ -21,7 +21,7 @@ application var pending = do
       msg <- WS.receiveData conn
       putStrLn "Request:"
       print . unpack $ msg
-      let response = dispatchRequest'
+      let response = dispatchRequest
                        (commandMap msg)
                        (drop 2 msg)
       (result, state') <- runStateT response state
