@@ -36,24 +36,29 @@ data Cmd = VERSION
          | ERR
   deriving Show
 
-secondByte :: ByteString -> Word8
-secondByte = (\(_:x:_) -> x) . unpack
+secondByte :: ByteString -> Maybe Word8
+secondByte = match . unpack
+              where match (_:x:_) = Just x
+                    match _ = Nothing
 
 commandMap :: ByteString -> Cmd
 commandMap c = case secondByte c of
-                 0xA2 -> VERSION
-                 0xB9 -> MOOLTIPASS_STATUS
-                 0xD3 -> END_MEMORYMGMT
-                 0xB2 -> GET_MOOLTIPASS_PARM
-                 0xBB -> SET_DATE
-                 0xC2 -> GET_CUR_CARD_CPZ
-                 0xAC -> GET_RANDOM_NUMBER
-                 0xA3 -> CONTEXT
-                 0xA9 -> ADD_CONTEXT
-                 0xA6 -> SET_LOGIN
-                 0xA7 -> SET_PASSWORD
-                 0xA8 -> CHECK_PASSWORD
-                 _    -> ERR
+                 Just byte ->
+                   case byte of
+                     0xA2 -> VERSION
+                     0xB9 -> MOOLTIPASS_STATUS
+                     0xD3 -> END_MEMORYMGMT
+                     0xB2 -> GET_MOOLTIPASS_PARM
+                     0xBB -> SET_DATE
+                     0xC2 -> GET_CUR_CARD_CPZ
+                     0xAC -> GET_RANDOM_NUMBER
+                     0xA3 -> CONTEXT
+                     0xA9 -> ADD_CONTEXT
+                     0xA6 -> SET_LOGIN
+                     0xA7 -> SET_PASSWORD
+                     0xA8 -> CHECK_PASSWORD
+                     _    -> ERR
+                 Nothing -> ERR
 
 addNullChar     :: String -> ByteString
 addNullChar str = on append C.pack str "\0"
