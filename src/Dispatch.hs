@@ -122,7 +122,7 @@ setLogin :: String
           -> StateIO ByteString
 setLogin login = do
   storage <- get
-  put $ addLoginCurrent storage login
+  put $ addLoginCurrent login storage
   return . pack $ [0x01, 0xA6, 0x01]
   
 err :: ByteString

@@ -104,9 +104,17 @@ activeUpdate :: (ChildNode -> ChildNode)
              -> (Storage -> Storage)
 activeUpdate f st = activeUpdateParent (activeUpdateChild st f) $ st
 
+{-withActiveChild :: (ChildNode -> a)
+                -> Storage
+                -> a
+withActiveChild f st = head . (map f) $
+  st^.parentNodes.traversed.(filtered pActive).traversed.(filtered cActive)
+  where pActive pnode = pnode^.service == st^.context._1
+        cActive cnode = cnode^.login == st^.context._2-}
+        
 addLoginCurrent :: String
-                 -> Storage
-                 -> Storage
+                -> Storage
+                -> Storage
 addLoginCurrent newLogin = activeUpdateParent $
   childNodes.filtered' %~ appendChild
   where
