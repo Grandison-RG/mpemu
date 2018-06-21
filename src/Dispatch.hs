@@ -112,19 +112,32 @@ getContext name = do
     False -> return $ pack [1, 0xA3, 0x00]
 
 addContext :: String
-               -> StateIO ByteString
+           -> StateIO ByteString
 addContext name = do
   storage <- get
   put $ appendService name storage
   return $ pack [1, 0xA9, 0x01]
 
 setLogin :: String
-          -> StateIO ByteString
+         -> StateIO ByteString
 setLogin login = do
   storage <- get
   put $ addLoginCurrent login storage
   return . pack $ [0x01, 0xA6, 0x01]
-  
+
+setPassword :: String 
+            -> StateIO ByteString
+setPassword password = do
+  storage <- get
+  put $ (MemoryModel.activeUpdate $
+        \c -> MemoryModel.ChildNode{
+                _login = (_login c)
+              , _cNodeIndex = (_cNodeIndex c)
+              , _password = Just password
+        }) 
+        storage
+  return . pack $ [0x01, 0xA7, 0x01]
+ 
 err :: ByteString
 err = pack [0x0, 0xff]
 
@@ -149,6 +162,7 @@ dispatchRequest c input =
     ADD_CONTEXT         -> addContext    strInput
     SET_LOGIN           -> setLogin      strInput
     CHECK_PASSWORD      -> checkPassword strInput
+    SET_PASSWORD        -> setPassword   strInput
     ERR                 -> return err
   where strInput :: String
         strInput = C.unpack input

@@ -10,6 +10,8 @@ module MemoryModel
   , childNodes
   , login
   , cNodeIndex
+  , activeUpdate
+  , ChildNode (..)
   )
 where
 
