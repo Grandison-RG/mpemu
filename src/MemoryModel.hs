@@ -132,9 +132,4 @@ addLoginCurrent newLogin = activeUpdateParent $
 setPasswordStateUpdate :: String
                        -> Storage
                        -> Storage
-setPasswordStateUpdate password = activeUpdate $
-        \c -> ChildNode{
-                _login = (_login c)
-              , _cNodeIndex = (_cNodeIndex c)
-              , _password = Just password
-        }
+setPasswordStateUpdate newPassword = activeUpdate $ set password (Just newPassword)
