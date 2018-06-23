@@ -129,13 +129,7 @@ setPassword :: String
             -> StateIO ByteString
 setPassword password = do
   storage <- get
-  put $ (MemoryModel.activeUpdate $
-        \c -> MemoryModel.ChildNode{
-                _login = (_login c)
-              , _cNodeIndex = (_cNodeIndex c)
-              , _password = Just password
-        }) 
-        storage
+  put $ setPasswordStateUpdate password storage
   return . pack $ [0x01, 0xA7, 0x01]
  
 err :: ByteString

@@ -6,11 +6,11 @@ module MemoryModel
   , checkParentNodeByService
   , appendService
   , addLoginCurrent
+  , setPasswordStateUpdate
   , parentNodes
   , childNodes
   , login
   , cNodeIndex
-  , activeUpdate
   , ChildNode (..)
   )
 where
@@ -128,3 +128,13 @@ addLoginCurrent newLogin = activeUpdateParent $
               , _cNodeIndex = length cns
               , _password = Nothing
               }
+
+setPasswordStateUpdate :: String
+                       -> Storage
+                       -> Storage
+setPasswordStateUpdate password = activeUpdate $
+        \c -> ChildNode{
+                _login = (_login c)
+              , _cNodeIndex = (_cNodeIndex c)
+              , _password = Just password
+        }
